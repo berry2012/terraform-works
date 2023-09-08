@@ -190,7 +190,43 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler = true 
   enable_cert_manager       = true
   enable_aws_load_balancer_controller  = true
-  #enable_aws_fsx_csi_driver    = true
+  enable_aws_cloudwatch_metrics = true
+
+  enable_external_dns = true
+  external_dns = {
+    name          = "external-dns"
+    chart_version = "1.12.2"
+    repository    = "https://kubernetes-sigs.github.io/external-dns/"
+    namespace     = "kube-system"
+    #values        = [templatefile("${path.module}/values.yaml", {})]
+  }
+  external_dns_route53_zone_arns = ["*"]
+
+  enable_aws_for_fluentbit = true
+  aws_for_fluentbit_cw_log_group = {
+    create          = true
+    use_name_prefix = false # Set this to true to enable name prefix
+    name_prefix     = "eks-cluster-logs-"
+    retention       = 7
+  }
+  aws_for_fluentbit = {
+    name          = "aws-for-fluent-bit"
+    chart_version = "0.1.24"
+    repository    = "https://aws.github.io/eks-charts"
+    namespace     = "kube-system"
+    #values        = [templatefile("${path.module}/values.yaml", {})]
+    #in case of cross account, you can specify another region here
+    set = [
+      {
+        name  = "cloudWatchLogs.region"
+        value = local.region
+      }
+    ]    
+  }
+
+  depends_on = [
+    module.eks
+  ]
 
   tags = local.tags
 }
@@ -199,42 +235,6 @@ module "eks_blueprints_addons" {
 ################################################################################
 # IRSA Roles
 ################################################################################
-
-
-module "cert_manager_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-
-  role_name_prefix = "${module.eks.cluster_name}-cert-manager-"
-  attach_cert_manager_policy    = true
-  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]
-
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:cert-manager"]
-    }
-  }
-
-  tags = local.tags
-}
-
-module "cluster_autoscaler_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-
-  role_name_prefix = "${module.eks.cluster_name}-cluster-autoscaler-"
-  attach_cluster_autoscaler_policy = true
-  cluster_autoscaler_cluster_names = [module.eks.cluster_name]
-
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:cluster-autoscaler"]
-    }
-  }
-
-  tags = local.tags
-}
-
 
 
 module "external_dns_irsa_role" {
@@ -286,21 +286,7 @@ module "efs_csi_irsa_role" {
   tags = local.tags
 }
 
-module "load_balancer_controller_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
-  role_name_prefix = "${module.eks.cluster_name}-load-balancer-controller-"
-  attach_load_balancer_controller_policy = true
-
-  oidc_providers = {
-    ex = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
-    }
-  }
-
-  tags = local.tags
-}
 
 
 
