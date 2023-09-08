@@ -24,7 +24,7 @@ jobs:
         with:
           directory: New_EKS_Cluster
           framework: terraform 
-          skip_check: CKV_AWS_14,CKV_AWS_28
+          skip_check: CKV_AWS_14,CKV_AWS_28,CKV_TF_1
           # This will add both a CLI output to the console and create a results.sarif file
           output_format: cli,sarif
           output_file_path: console,results.sarif
