@@ -43,6 +43,7 @@ provider "kubectl" {
 }
 
 
+
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
@@ -76,6 +77,10 @@ module "eks" {
 
   cluster_enabled_log_types = [ "audit", "api", "authenticator", "controllerManager", "scheduler" ]
 
+# if you enable automode outside of terraform, need to add this to be able to delete the cluster
+  cluster_compute_config = {
+    enabled = true
+  }  
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -131,7 +136,7 @@ module "eks" {
 
 
 ################################################################################
-# EKS Blueprints Addons
+# EKS Blueprints Addons - Selfmanaged
 ################################################################################
 
 module "eks_blueprints_addons" {

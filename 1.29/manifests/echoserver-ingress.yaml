@@ -40,7 +40,16 @@ spec:
         name: echoserver
         ports:
         - containerPort: 8080
----        
+---
+
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: awesome-class
+spec:
+  controller: ingress.k8s.aws/alb
+  
+---  
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -51,7 +60,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/tags: Environment=dev,Team=test
 spec:
-  ingressClassName: alb
+  ingressClassName: awesome-class
   rules:
     - host: echoserver.eoalola.people.aws.dev
       http:    
