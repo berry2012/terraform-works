@@ -20,26 +20,10 @@ terraform plan -out main.tfplan
 terraform apply main.tfplan
 
 ```
-
-## Expected result:
-
-```
-Apply complete! Resources: 5 added, 0 changed, 3 destroyed.
-
-Outputs:
-
-cluster_endpoint = "https://123456ABCDEFGH.gr7.us-east-2.eks.amazonaws.com"
-cluster_name = "buildonaws"
-cluster_security_group_id = "sg-0049a5c4ed9f1df73"
-configure_kubectl = "aws eks --region us-east-2 update-kubeconfig --name buildonaws"
-region = "us-east-2"
-```
-
-
 ## Authenticate your local machine kubectl
 
 ```
-aws eks --region us-east-2 update-kubeconfig --name buildonaws
+aws eks --region eu-west-2 update-kubeconfig --name poc
 ```
 
 
@@ -47,13 +31,12 @@ aws eks --region us-east-2 update-kubeconfig --name buildonaws
 
 ```
 kubectl get nodes -o wide
-NAME                                        STATUS   ROLES    AGE     VERSION               INTERNAL-IP   EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION                  CONTAINER-RUNTIME
-ip-10-0-22-245.us-east-2.compute.internal   Ready    <none>   44s     v1.27.4-eks-8ccc7ba   10.0.22.245   <none>        Amazon Linux 2   5.10.186-179.751.amzn2.x86_64   containerd://1.6.19
-ip-10-0-28-48.us-east-2.compute.internal    Ready    <none>   12m     v1.27.4-eks-8ccc7ba   10.0.28.48    <none>        Amazon Linux 2   5.10.186-179.751.amzn2.x86_64   containerd://1.6.19
-ip-10-0-35-148.us-east-2.compute.internal   Ready    <none>   108s    v1.27.4-eks-8ccc7ba   10.0.35.148   <none>        Amazon Linux 2   5.10.186-179.751.amzn2.x86_64   containerd://1.6.19
-ip-10-0-47-123.us-east-2.compute.internal   Ready    <none>   6m25s   v1.27.4-eks-8ccc7ba   10.0.47.123   <none>        Amazon Linux 2   5.10.186-179.751.amzn2.x86_64   containerd://1.6.19
-ip-10-0-6-115.us-east-2.compute.internal    Ready    <none>   2m43s   v1.27.4-eks-8ccc7ba   10.0.6.115    <none>        Amazon Linux 2   5.10.186-179.751.amzn2.x86_64   containerd://1.6.19
-```
+NAME                                        STATUS                     ROLES    AGE     VERSION                INTERNAL-IP   EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION                  CONTAINER-RUNTIME
+ip-10-0-27-178.eu-west-2.compute.internal   Ready                      <none>   4m20s   v1.29.13-eks-5d632ec   10.0.27.178   <none>        Amazon Linux 2   5.10.233-224.894.amzn2.x86_64   containerd://1.7.25
+ip-10-0-29-236.eu-west-2.compute.internal   Ready                      <none>   2m34s   v1.29.13-eks-5d632ec   10.0.29.236   <none>        Amazon Linux 2   5.10.233-224.894.amzn2.x86_64   containerd://1.7.25
+ip-10-0-3-185.eu-west-2.compute.internal    Ready,SchedulingDisabled   <none>   14m     v1.29.13-eks-5d632ec   10.0.3.185    <none>        Amazon Linux 2   5.10.233-224.894.amzn2.x86_64   containerd://1.7.25
+ip-10-0-35-144.eu-west-2.compute.internal   Ready                      <none>   4m8s    v1.29.13-eks-5d632ec   10.0.35.144   <none>        Amazon Linux 2   5.10.233-224.894.amzn2.x86_64   containerd://1.7.25
+ip-10-0-6-199.eu-west-2.compute.internal    Ready                      <none>   2m43s   v1.29.13-eks-5d632ec   10.0.6.199    <none>        Amazon Linux 2   5.10.233-224.894.amzn2.x86_64   containerd://1.7.25```
 
 ## Verify EBS CSI Driver pods are running
 
@@ -63,6 +46,13 @@ ip-10-0-6-115.us-east-2.compute.internal    Ready    <none>   2m43s   v1.27.4-ek
 NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
 ebs-csi-controller   2/2     2            2           8m42s
 ```
+
+clusterName: poc
+enableServiceMutatorWebhook: false
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::520817024429:role/alb-controller-20250306083558990100000014
+  name: aws-load-balancer-controller-sa
 
 
 ## Verify Pods running:
@@ -281,9 +271,26 @@ aws cloudtrail lookup-events \
 
 ```
 
+
 kubectl delete -f manifests
 
 terraform destroy --auto-approve
+
+
+# if there is an issue after modify EKS outside terraform
+export KUBE_CONFIG_PATH=/home/ec2-user/.kube/config 
+terraform state rm `terraform state list | grep eks`
+terraform state rm `terraform state list | grep kubectl`
+terraform state rm `terraform state list | grep helm`
+terraform state rm `terraform state list | grep kubernetes`
 ```
 
 
+aws autoscaling update-auto-scaling-group \
+    --auto-scaling-group-name eks-worker-group-1-2025022111304443980000001b-32ca9423-1a7b-10c8-1f24-8d7f8d454a48 \
+    --min-size 2 \
+    --max-size 3 \
+    --desired-capacity 2 --region eu-west-2
+    
+    
+    

@@ -1,0 +1,8 @@
+clusterName: poc
+enableServiceMutatorWebhook: false
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::520817024429:role/alb-controller-20250306083558990100000014
+  name: aws-load-balancer-controller-sa
+vpcId: vpc-0250fe693df41f733
+region: eu-west-2

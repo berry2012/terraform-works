@@ -24,41 +24,6 @@ spec:
     requests:
       storage: 4Gi
 ---       
-# apiVersion: v1
-# kind: Pod
-# metadata:
-#   name: ebs-persistent-app
-#   namespace: persistent-storage  
-# spec:
-#   securityContext: 
-#     seccompProfile:
-#       type: RuntimeDefault      
-#   automountServiceAccountToken: false
-#   containers:
-#   - name: app
-#     image: public.ecr.aws/docker/library/busybox:latest
-#     command: ["/bin/sh"]
-#     args: ["-c", "while true; do echo $(date -u) >> /data/out.txt; sleep 60; done"]
-#     imagePullPolicy: Always
-#     resources:
-#       requests:
-#         memory: "64Mi"
-#         cpu: "250m"
-#       limits:
-#         memory: "128Mi"
-#         cpu: "500m"
-#     securityContext:
-#       capabilities:
-#         drop:
-#           - ALL         
-#     volumeMounts:
-#     - name: persistent-storage
-#       mountPath: /data
-#   volumes:
-#   - name: persistent-storage
-#     persistentVolumeClaim:
-#       claimName: ebs-claim
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
